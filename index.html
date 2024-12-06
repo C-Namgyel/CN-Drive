@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CN Drive</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="./googleFont.css" rel="stylesheet">
+</head>
+<body>
+    <header>
+        <div class="title">CN Drive</div>
+    </header>
+    <ul id="customMenu">
+        <!-- <li onclick="alert('Option 1 clicked!')">Delete</li>
+        <li onclick="alert('Option 2 clicked!')">Rename</li>
+        <li onclick="alert('Option 3 clicked!')">Copy Link</li> -->
+    </ul>
+    <div class="container">
+        <aside class="sidebar">
+            <div class="toolbar">
+                <button id="folder" class="uiButtons">New Folder</button>
+                <button id="uploadBtn" class="uiButtons" onclick="document.getElementById('upload').click();">Upload<input type="file" id="upload" style="display: none;"></button>
+                <button id="newNote" class="uiButtons" hidden>New Note</button>
+            </div>
+            <ul id="sidebar">
+                <li id="navDrive" class="side-bar" style="background-color: grey;">My Drive</li>
+                <li id="navNotes" class="side-bar">Notes</li>
+            </ul>
+        </aside>
+        <main class="main-content">
+            <div id="contentHeader" style="overflow: auto;">Drive</div>
+            <div id="backBtn" style="font-weight: bolder; float: left;" hidden>&larr;</div>
+            <!-- <div class="file-list">
+                <div class="file-item">📄 Document 1</div>
+                <div class="file-item">📄 Document 2</div>
+                <div class="file-item">📁 Folder 1</div>
+                <div class="file-item">📁 Folder 2</div>
+                <div class="file-item">🖼️ Image 1</div>
+                <div class="file-item">🖼️ Image 2</div>
+            </div> -->
+            <div id="fileList" class="file-list">
+                Loading...
+            </div>
+        </main>
+    </div>
+    <div id="snackbar" hidden></div>
+    <script src="./elements.js"></script>
+    <script src="./code.js" type="module"></script>
+</body>
+</html>
