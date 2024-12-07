@@ -1,8 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-analytics.js";
-import { getDatabase, ref, set, get, child, update, remove, onValue } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
-import { getStorage, ref as stRef, uploadBytes, deleteObject, getDownloadURL, uploadBytesResumable } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-storage.js";
-// https://firebase.google.com/docs/web/setup#available-libraries
+import { getDatabase, ref, get, child, update, remove, onValue } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+import { getStorage, ref as stRef, deleteObject, getDownloadURL, uploadBytesResumable } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-storage.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyCehSw4B4NlVVUlpveHdGsSXQZz0lpWRfw",
@@ -33,9 +32,8 @@ const writeData = (loc, data, func) => {
     });
 };
 const readData = async (loc, func) => {
-    const dbRef = ref(database);
     try {
-        const snapshot = await get(child(dbRef, loc));
+        const snapshot = await get(child(ref(database), loc));
         if (snapshot.exists()) {
             func(snapshot.val());
         } else {
@@ -46,8 +44,7 @@ const readData = async (loc, func) => {
     }
 };
 const deleteData = (loc, func) => {
-    const userRef = ref(database, loc);
-    remove(userRef)
+    remove(ref(database, loc))
     .then(() => {
         func();
     })
@@ -56,83 +53,32 @@ const deleteData = (loc, func) => {
     });
 };
 const onUpdate = (loc, func) => {
-    const userRef = ref(database, loc);
-    onValue(userRef, (snapshot) => {
+    onValue(ref(database, loc), (snapshot) => {
         const data = snapshot.val();
         func(data);
     });
 };
 //// Cloud Storage
 function uploadFile(file, path, func) {
-    // Create a reference to the location where the file will be stored
-    const storageRef = stRef(storage, path);
-    const uploadTask = uploadBytesResumable(storageRef, file);
-    const size = file.size;
-    let displaySize = size;
-    let unit = "";
-    if (size > 1024**3) {
-        unit = "GB";
-        displaySize = byte2GB(displaySize);
-    } else if (size <= 1024) {
-        unit = "B";
-    } else if (size <= 1024**2) {
-        unit = "KB";
-        displaySize = byte2KB(displaySize);
-    } else if (size <= 1024**3) {
-        unit = "MB";
-        displaySize = byte2MB(displaySize);
-    }
-    // Upload the file to the reference location
+    const uploadTask = uploadBytesResumable(stRef(storage, path), file);
     uploadTask.on(
         "state_changed",
         (snapshot) => {
-            // Get upload progress
             const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-            let tempSize = size * (progress / 100);
-            let tempUnit = "";
-            if (tempSize > 1024**3) {
-                tempUnit = "GB";
-                tempSize = byte2GB(tempSize);
-            } else if (tempSize <= 1024) {
-                tempUnit = "B";
-            } else if (tempSize <= 1024**2) {
-                tempUnit = "KB";
-                tempSize = byte2KB(tempSize);
-            } else if (tempSize <= 1024**3) {
-                tempUnit = "MB";
-                tempSize = byte2MB(tempSize);
-            }
-            snackbar(`Upload progress: ${tempSize}${tempUnit}/${displaySize}${unit} (${Number(progress.toFixed(2))}%)`, 0);
-        
-            // Optionally log state
-            switch (snapshot.state) {
-                case "paused":
-                // Upload is paused
-                break;
-                case "running":
-                // Upload is running
-                break;
-            }
+            func("Progress", [progress, snapshot.state]);
         },
         (error) => {
             console.error("Error uploading file:", error);
-            snackbar("Failed to Upload", 3000);
         },
         () => {
-          // Get the download URL once upload is complete
             getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
-                func(downloadURL);
-                snackbar("Successfully Uploaded", 3000);
+                func("Complete", downloadURL);
             });
         }
     );      
-}  
+}
 function deleteFile(path, func) {
-    // Create a reference to the file to delete
-    const fileRef = stRef(storage, path);
-  
-    // Delete the file
-    deleteObject(fileRef).then(() => {
+    deleteObject(stRef(storage, path)).then(() => {
         func();
     }).catch((error) => {
         console.error("Error deleting file:", error);
@@ -322,9 +268,50 @@ folderBtn.onclick = function() { // New Folder
 uploadInput.oninput = function() { // Upload file
     let file = this.files[0];
     let timestamp = Date.now();
-    uploadFile(file, timestamp+"/", function(dat) {
-        writeData(locationStr + "/01" + timestamp, {"name": file.name, "size": file.size, "url": dat}, function() {
-        })
+    const size = file.size;
+    let displaySize = size;
+    let unit = "";
+    if (size > 1024**3) {
+        unit = "GB";
+        displaySize = byte2GB(displaySize);
+    } else if (size <= 1024) {
+        unit = "B";
+    } else if (size <= 1024**2) {
+        unit = "KB";
+        displaySize = byte2KB(displaySize);
+    } else if (size <= 1024**3) {
+        unit = "MB";
+        displaySize = byte2MB(displaySize);
+    }
+    uploadFile(file, timestamp+"/", function(type, dat) {
+        if (type == "Progress") {
+            const progress = dat[0];
+            let tempSize = size * (progress / 100);
+            let tempUnit = "";
+            if (tempSize > 1024**3) {
+                tempUnit = "GB";
+                tempSize = byte2GB(tempSize);
+            } else if (tempSize <= 1024) {
+                tempUnit = "B";
+            } else if (tempSize <= 1024**2) {
+                tempUnit = "KB";
+                tempSize = byte2KB(tempSize);
+            } else if (tempSize <= 1024**3) {
+                tempUnit = "MB";
+                tempSize = byte2MB(tempSize);
+            }
+            snackbar(`Upload progress: ${tempSize}${tempUnit}/${displaySize}${unit} (${Number(progress.toFixed(2))}%)`, 0);
+            switch (dat[1]) {
+                case "paused":
+                break;
+                case "running":
+                break;
+            }
+        } else if (type == "Complete") {
+            writeData(locationStr + "/01" + timestamp, {"name": file.name, "size": file.size, "url": dat}, function() {
+                snackbar("Successfully Uploaded", 3000);
+            })
+        }
     })
 }
 noteBtn.onclick = function() {
@@ -339,6 +326,18 @@ noteBtn.onclick = function() {
 document.addEventListener('click', () => {
     customMenu.style.display = 'none';
 });
+
+// Menu
+document.getElementById('menuToggle').onclick = function() {
+    document.getElementById('sidebar').classList.toggle('show');
+};
+document.onclick = function() {
+    let sidebar = document.getElementById('sidebar');
+    let menuToggle = document.getElementById('menuToggle');
+    if (!sidebar.contains(e.target) && !menuToggle.contains(e.target)) {
+        sidebar.classList.remove('show');
+    }
+};
 
 // Firebase Update Listener
 onUpdate("/", function(dat) {

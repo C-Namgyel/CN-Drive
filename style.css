@@ -6,56 +6,104 @@ body {
     background-color: #f9f9f9;
     color: #333;
 }
+
+/* Header */
 header {
     display: flex;
     align-items: center;
     background-color: #4caf50;
-    color: white;
-    padding: 10px 20px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 10px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
+.logo-container {
+    display: flex;
+    align-items: center;
+}
+.logo {
+    height: 40px;
+    width: auto;
+    margin-right: 10px;
+}
+.title {
+    font-size: 24px;
+    font-weight: bolder;
+}
+#menuToggle {
+    display: none; /* Hidden by default for desktop */
+    background: none;
+    border: none;
+    font-size: 24px;
+    margin-right: 10px;
+    cursor: pointer;
+    color: white;
+}
+
+/* Container */
 .container {
     display: flex;
     flex-direction: row; /* Ensures sidebar and main content are side-by-side */
     height: calc(100vh - 60px);
 }
 
-/* Header Title */
-.title {
-    font-size: 26px;
+/* Main Content */
+.main-content {
+    flex-grow: 1;
+    padding: 20px;
+    background-color: #ffffff;
+    border-radius: 10px;
+    margin: 20px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    overflow-y: auto;
+}
+#contentHeader {
+    text-align: center;
+    font-size: 24px;
     font-weight: 600;
-    letter-spacing: 1px;
+    margin-bottom: 20px;
+    color: #4caf50;
+    overflow: hidden;
+    white-space: nowrap;
 }
 
-/* Custom Right-Click Menu */
-#customMenu {
-    display: none;
-    position: absolute;
-    background-color: white;
-    border-radius: 8px;
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
-    z-index: 1000;
-    padding: 10px 0;
+/* File List */
+.file-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
 }
-#customMenu li {
-    padding: 10px 20px;
-    list-style: none;
-    cursor: pointer;
+.file-item {
+    width: 100px;
+    text-align: center;
+    padding: 10px;
+    margin: 5px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-clamp: 2;
+    -webkit-line-clamp: 2;
     font-size: 14px;
-    transition: background-color 0.2s ease;
+    line-height: 1.2em;
+    height: calc(1.2em * 1.5);
+    cursor: pointer;
+    word-wrap: break-word;
 }
-#customMenu li:hover {
-    background-color: #4caf50;
-    color: white;
+.file-item:hover {
+    background-color: #f0f0f0;
+    border-color: #4caf50;
 }
 
-/* Sidebar */
+/* Sidebar (Desktop) */
 .sidebar {
-    flex: 0 0 240px; /* Fixes the width of the sidebar */
+    flex: 0 0 240px;
     background-color: #333;
     color: white;
     padding: 20px;
     box-shadow: 2px 0 6px rgba(0, 0, 0, 0.1);
+    transform: translateX(0); /* Always visible on desktop */
+    transition: transform 0.3s ease-in-out;
 }
 .sidebar ul {
     list-style: none;
@@ -92,54 +140,6 @@ header {
     background-color: #45a049;
 }
 
-/* Main Content */
-.main-content {
-    flex-grow: 1; /* Takes up remaining space */
-    padding: 20px;
-    background-color: #ffffff;
-    border-radius: 10px;
-    margin: 20px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-    overflow-y: auto; /* Ensures scrollability if content overflows */
-}
-#contentHeader {
-    text-align: center;
-    font-size: 24px;
-    font-weight: 600;
-    margin-bottom: 20px;
-    color: #4caf50;
-}
-
-/* File List */
-.file-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 15px;
-}
-.file-item {
-    width: 100px;
-    text-align: center;
-    padding: 10px;
-    margin: 5px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    display: -webkit-box; /* Enables flexible layout for truncation */
-    -webkit-box-orient: vertical; /* Defines the box orientation */
-    overflow: hidden; /* Hides overflowing text */
-    text-overflow: ellipsis; /* Adds "..." for truncated text */
-    line-clamp: 2; /* Limits the content to 2 lines */
-    -webkit-line-clamp: 2; /* Limits the content to 2 lines */
-    font-size: 14px; /* Adjust font size for better fitting */
-    line-height: 1.2em; /* Sets consistent line spacing */
-    height: calc(1.2em * 1.5); /* Ensures space for exactly 2 lines */
-    cursor: pointer;
-    word-wrap: break-word; /* Allows breaking long words for better fit */
-}
-.file-item:hover {
-    background-color: #f0f0f0;
-    border-color: #4caf50;
-}
-
 /* Snackbar */
 #snackbar {
     position: fixed;
@@ -151,4 +151,50 @@ header {
     color: white;
     padding: 10px;
     font-size: 14px;
+}
+
+/* Custom Right-Click Menu */
+#customMenu {
+    display: none;
+    position: absolute;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+    padding: 10px 0;
+}
+#customMenu li {
+    padding: 10px 20px;
+    list-style: none;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.2s ease;
+}
+#customMenu li:hover {
+    background-color: #4caf50;
+    color: white;
+}
+
+/* Responsive Sidebar */
+@media (max-width: 768px) {
+    .sidebar {
+        position: absolute;
+        z-index: 1000;
+        width: 240px;
+        height: 100vh;
+        transform: translateX(-100%); /* Hidden by default */
+        transition: transform 0.3s ease-in-out;
+    }
+
+    .sidebar.show {
+        transform: translateX(0); /* Show when toggled */
+    }
+
+    .main-content {
+        margin: 0; /* Remove margin for mobile */
+    }
+
+    #menuToggle {
+        display: inline-block; /* Visible only on mobile */
+    }
 }
