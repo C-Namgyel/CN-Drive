@@ -175,13 +175,77 @@ header {
     color: white;
 }
 
+/* Barrier */
+.barrier {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    left: 0%;
+    top: 0%;
+    z-index: 100;
+}
+
+/* Custom Prompt Container */
+#customPrompt {
+    display: block; /* Hidden by default, shown when triggered */
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    padding: 20px;
+    background-color: white;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    z-index: 9999;
+    width: 300px;
+    text-align: center;
+}
+#promptSpan {
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+}
+#promptInput {
+    width: 80%;
+    padding: 8px;
+    margin: 10px 0;
+    font-size: 14px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    outline: none;
+}
+.promptBtn {
+    padding: 8px 15px;
+    font-size: 14px;
+    cursor: pointer;
+    border: none;
+    border-radius: 6px;
+    transition: background-color 0.3s ease;
+    margin: 5px;
+}
+#promptCancel {
+    background-color: #f44336;
+    color: white;
+}
+#promptCancel:hover {
+    background-color: #d32f2f;
+}
+#promptOk {
+    background-color: #4caf50;
+    color: white;
+}
+#promptOk:hover {
+    background-color: #388e3c;
+}
+
 /* Responsive Sidebar */
 @media (max-width: 768px) {
     .sidebar {
+        flex: 0 0 240px;
         position: absolute;
         z-index: 1000;
         width: 240px;
-        height: 100vh;
+        height: calc(100vh - 100px);
         transform: translateX(-100%); /* Hidden by default */
         transition: transform 0.3s ease-in-out;
     }

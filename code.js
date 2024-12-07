@@ -104,14 +104,20 @@ function removeFileExtension(filename) {
     let lastDotIndex = filename.lastIndexOf(".");
     return lastDotIndex === -1 ? filename : filename.substring(0, lastDotIndex);
 }
-function snackbar(text, duration) {
-    document.getElementById("snackbar").hidden = false;
-    document.getElementById("snackbar").innerHTML = text;
+function showSnackbar(text, duration) {
+    snackbar.hidden = false;
+    snackbar.innerHTML = text;
     if (duration > 0) {
         setTimeout(function() {
-            document.getElementById("snackbar").hidden = true;
+            snackbar.hidden = true;
         }, duration);
     }
+}
+function getFileExtension(filename) {
+    // Split the filename by dot and get the last part
+    const parts = filename.split('.');
+    // Return the last part (extension), or an empty string if no extension is found
+    return parts.length > 1 ? parts[parts.length - 1].toLowerCase() : '';
 }
 function customMenuAction(action, path) {
     let keys = path.split("/")
@@ -120,29 +126,38 @@ function customMenuAction(action, path) {
     if (action == "Copy Link") {
         navigator.clipboard.writeText(tempData["url"])
         .then(() => {
-            snackbar("Successfully Copied", 3000);
+            showSnackbar("Successfully Copied", 3000);
         })
         .catch((err) => {
             console.error("Failed to copy text: ", err);
-            snackbar("Failed to copy", 3000);
+            showSnackbar("Failed to copy", 3000);
         });
     } else if (action == "Rename") {
-        let filename = prompt("Enter a new name for the file:");
-        if (filename.trim() != "") {
-            let dat = tempData;
-            dat["name"] = filename;
-            writeData(path, dat, function() {
-                snackbar("Successfully Renamed", 3000);
-            })
-        } else {
-            snackbar("Invalid filename", 3000);
-        }
+        askPrompt("Enter a new name for the file:", tempData["name"], function(filename) {
+            if (filename != null && filename.trim() != "") {
+                let conf = true;
+                if (getFileExtension(filename) != getFileExtension(tempData["name"])) {
+                    conf = confirm("Are you sure you want to change the file extension?");
+                }
+                if (conf == true) {
+                    let dat = tempData;
+                    dat["name"] = filename;
+                    writeData(path, dat, function() {
+                        showSnackbar("Successfully Renamed", 3000);
+                    })
+                }
+            } else {
+                if (filename != null) {
+                    showSnackbar("Invalid filename", 3000);
+                }
+            }
+        })
     } else if (action == "Delete") {
         let conf = confirm("Are you sure? This cannot be undone.");
         if (conf == true) {
             deleteFile(ts+"/", function() {
                 deleteData(path, function() {
-                    snackbar("Successfully Deleted", 3000);
+                    showSnackbar("Successfully Deleted", 3000);
                 })
             });
         }
@@ -151,6 +166,41 @@ function customMenuAction(action, path) {
 Size: ${tempData["size"]} Bytes
 Uploaded Timestamp: ${ts}`)
     }
+}
+function askPrompt(txt, def, func) {
+    let barrier = document.createElement("div");
+    barrier.className = "barrier";
+    document.body.appendChild(barrier);
+    let div = document.createElement("div");
+    div.id = "customPrompt";
+    barrier.appendChild(div);
+    let span = document.createElement("span");
+    span.id = "promptSpan";
+    span.innerHTML = txt;
+    div.appendChild(span);
+    let input = document.createElement("input");
+    input.id = "promptInput";
+    input.value = def;
+    div.appendChild(input);
+    let cancel = document.createElement("button");
+    cancel.id = "promptCancel";
+    cancel.innerHTML = "Cancel";
+    cancel.className = "promptBtn";
+    div.appendChild(cancel);
+    let ok = document.createElement("button");
+    ok.id = "promptOk";
+    ok.innerHTML = "OK";
+    ok.className = "promptBtn";
+    div.appendChild(ok);
+    ok.onclick = function() {
+        barrier.remove();
+        func(input.value);
+    }
+    cancel.onclick = function() {
+        barrier.remove()
+        func(null);
+    }
+    input.focus();
 }
 function refreshScreen(loc) {
     fileList.innerHTML = "";
@@ -239,6 +289,7 @@ navDrive.onclick = function() {
     noteBtn.hidden = true;
     uploadBtn.hidden = false;
     refreshScreen(locationStr);
+    sidebar.classList.remove('show');
 }
 navNote.onclick = function() {
     navMode = "Notes";
@@ -249,6 +300,7 @@ navNote.onclick = function() {
     noteBtn.hidden = false;
     uploadBtn.hidden = true;
     refreshScreen(locationStr);
+    sidebar.classList.remove('show');
 }
 backBtn.onclick = function() {
     locationStr = locationStr.substring(0, locationStr.lastIndexOf('/'));
@@ -257,13 +309,17 @@ backBtn.onclick = function() {
 
 // User Interface
 folderBtn.onclick = function() { // New Folder
-    let folderName = prompt("Enter new folder name");
-    if (folderName != null & folderName.trim() != "") {
-        if (folderName.trim() != "") {
+    sidebar.classList.remove('show');
+    askPrompt("Folder Name?", "New Folder", function(folderName) {
+        if (folderName != null && folderName.trim() != "") {
             locationStr = `${locationStr}/00${folderName}`;
             refreshScreen(locationStr);
+        } else {
+            if (folderName != null) {
+                showSnackbar("Invalid Folder name", 3000);
+            }
         }
-    }
+    });
 }
 uploadInput.oninput = function() { // Upload file
     let file = this.files[0];
@@ -300,7 +356,7 @@ uploadInput.oninput = function() { // Upload file
                 tempUnit = "MB";
                 tempSize = byte2MB(tempSize);
             }
-            snackbar(`Upload progress: ${tempSize}${tempUnit}/${displaySize}${unit} (${Number(progress.toFixed(2))}%)`, 0);
+            showSnackbar(`Upload progress: ${tempSize}${tempUnit}/${displaySize}${unit} (${Number(progress.toFixed(2))}%)`, 0);
             switch (dat[1]) {
                 case "paused":
                 break;
@@ -309,12 +365,13 @@ uploadInput.oninput = function() { // Upload file
             }
         } else if (type == "Complete") {
             writeData(locationStr + "/01" + timestamp, {"name": file.name, "size": file.size, "url": dat}, function() {
-                snackbar("Successfully Uploaded", 3000);
+                showSnackbar("Successfully Uploaded", 3000);
             })
         }
     })
 }
 noteBtn.onclick = function() {
+    sidebar.classList.remove('show');
     let title = prompt("Title");
     let inp = prompt("Your Note Here");
     let timestamp = Date.now();
@@ -328,13 +385,11 @@ document.addEventListener('click', () => {
 });
 
 // Menu
-document.getElementById('menuToggle').onclick = function() {
-    document.getElementById('sidebar').classList.toggle('show');
+toggleMenu.onclick = function() {
+    sidebar.classList.toggle('show');
 };
-document.onclick = function() {
-    let sidebar = document.getElementById('sidebar');
-    let menuToggle = document.getElementById('menuToggle');
-    if (!sidebar.contains(e.target) && !menuToggle.contains(e.target)) {
+document.onclick = function(e) {
+    if (!sidebar.contains(e.target) && !toggleMenu.contains(e.target)) {
         sidebar.classList.remove('show');
     }
 };

@@ -21,7 +21,7 @@
         <aside class="sidebar" id="sidebar">
             <div class="toolbar">
                 <button id="folder" class="uiButtons">New Folder</button>
-                <button id="uploadBtn" class="uiButtons" onclick="document.getElementById('upload').click();">Upload<input type="file" id="upload" style="display: none;"></button>
+    <button id="uploadBtn" class="uiButtons" onclick="document.getElementById('upload').click(); sidebar.classList.remove('show');">Upload<input type="file" id="upload" style="display: none;"></button>
                 <button id="newNote" class="uiButtons" hidden>New Note</button>
             </div>
             <ul id="sidebar">
@@ -37,7 +37,13 @@
         </main>
     </div>
     <div id="snackbar" hidden></div>
-    <script src="./elements.js"></script>
-    <script src="./code.js" type="module"></script>
+    <!-- <div id="customPrompt">
+        <span id="promptSpan">Enter your response: </span><br>
+        <input id="promptInput"><br>
+        <button class="promptBtn" id="promptCancel">Cancel</button>
+        <button class="promptBtn" id="promptOk">OK</button>
+    </div> -->
 </body>
+<script src="./elements.js"></script>
+<script src="./code.js" type="module"></script>
 </html>

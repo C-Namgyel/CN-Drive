@@ -8,3 +8,6 @@ const uploadBtn = document.getElementById("uploadBtn");
 const fileList = document.getElementById("fileList");
 const backBtn = document.getElementById("backBtn");
 const customMenu = document.getElementById('customMenu');
+const toggleMenu = document.getElementById('menuToggle');
+const sidebar = document.getElementById('sidebar');
+const snackbar = document.getElementById("snackbar");
