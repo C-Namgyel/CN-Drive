@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-analytics.js";
 import { getDatabase, ref, get, child, update, remove, onValue } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
-import { getStorage, ref as stRef, deleteObject, getDownloadURL, uploadBytesResumable } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-storage.js";
+import { getStorage, ref as stRef, deleteObject, getDownloadURL, uploadBytesResumable, updateMetadata } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-storage.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyCehSw4B4NlVVUlpveHdGsSXQZz0lpWRfw",
@@ -60,7 +60,14 @@ const onUpdate = (loc, func) => {
 };
 //// Cloud Storage
 function uploadFile(file, path, func) {
-    const uploadTask = uploadBytesResumable(stRef(storage, path), file);
+    // Create a metadata object with the desired filename
+    const metadata = {
+        contentDisposition: `attachment; filename="${file.name}"` // This sets the filename to the original file name
+    };
+
+    // Upload the file with the metadata
+    const uploadTask = uploadBytesResumable(stRef(storage, path), file, metadata);
+
     uploadTask.on(
         "state_changed",
         (snapshot) => {
@@ -75,7 +82,7 @@ function uploadFile(file, path, func) {
                 func("Complete", downloadURL);
             });
         }
-    );      
+    );
 }
 function deleteFile(path, func) {
     deleteObject(stRef(storage, path)).then(() => {
@@ -83,6 +90,20 @@ function deleteFile(path, func) {
     }).catch((error) => {
         console.error("Error deleting file:", error);
     });
+}
+function updateFileMetadata(filePath, newMetadata, func) {
+    // Reference to the file in Firebase Storage
+    const fileRef = stRef(storage, filePath);
+
+    // Update the metadata
+    updateMetadata(fileRef, newMetadata)
+        .then((updatedMetadata) => {
+            func("Metadata Updated", updatedMetadata);
+        })
+        .catch((error) => {
+            console.error("Error updating metadata:", error);
+            func("Error", error);
+        });
 }
 
 // Global Variables
@@ -120,7 +141,7 @@ function getFileExtension(filename) {
     return parts.length > 1 ? parts[parts.length - 1].toLowerCase() : '';
 }
 function customMenuAction(action, path) {
-    let keys = path.split("/")
+    let keys = path.split("/");
     let tempData = keys.reduce((acc, key) => acc[key], data);
     let ts = path.split("/").pop().slice(2);
     if (action == "Copy Link") {
@@ -142,9 +163,12 @@ function customMenuAction(action, path) {
                 if (conf == true) {
                     let dat = tempData;
                     dat["name"] = filename;
-                    writeData(path, dat, function() {
-                        showSnackbar("Successfully Renamed", 3000);
-                    })
+                    // METADATA
+                    updateFileMetadata(ts+"/", {contentDisposition: `attachment; filename="${filename}"`}, (status, result) => {
+                        writeData(path, dat, function() {
+                            showSnackbar("Successfully Renamed", 3000);
+                        })
+                    });
                 }
             } else {
                 if (filename != null) {
@@ -165,6 +189,12 @@ function customMenuAction(action, path) {
         alert(`Name: ${tempData["name"]}
 Size: ${tempData["size"]} Bytes
 Uploaded Timestamp: ${ts}`)
+    } else if (action == "Download") {
+        let a = document.createElement("a");
+        a.href = `${tempData["url"]}?cache_bust=${new Date().getTime()}`;
+        a.download = tempData["name"];
+        a.target = "_blank";
+        a.click();
     }
 }
 function askPrompt(txt, def, func) {
@@ -212,14 +242,14 @@ function refreshScreen(loc) {
                 let newFile = document.createElement("div");
                 newFile.className = "file-item";
                 if (fileInfo[0] == "00") {
-                    newFile.innerHTML = `📁 ${fileInfo[1]}`;
+                    newFile.innerHTML = `<span class='icon'>📁</span><span class='text'>${fileInfo[1]}</span>`;
                     newFile.onclick = function() {
                         locationStr += `/${o}`;
                         refreshScreen(locationStr);
                     }
                 } else if (fileInfo[0] == "01") {
                     if (locationStr.split("/")[0] == "Drive") {
-                        newFile.innerHTML = `📄 ${keys.reduce((acc, key) => acc[key], data)[o]["name"]}`;
+                        newFile.innerHTML = `<span class='icon'>📄</span><span class='text'>${keys.reduce((acc, key) => acc[key], data)[o]["name"]}</span>`;
                         newFile.setAttribute("path", `${locationStr}/${o}`);
                         newFile.onclick = function() {
                             window.open(keys.reduce((acc, key) => acc[key], data)[o]["url"], "_blank");
@@ -232,7 +262,7 @@ function refreshScreen(loc) {
                             customMenu.innerHTML = "";
                             let arr = [];
                             if (navMode == "Drive") {
-                                arr = ["Copy Link", "Rename", "Delete", "About"];
+                                arr = ["Copy Link", "Download", "Rename", "Delete", "About"];
                             } else if (navMode = "Notes") {
                                 arr = ["Copy", "Edit", "Delete"];
                             }
@@ -339,7 +369,8 @@ uploadInput.oninput = function() { // Upload file
         unit = "MB";
         displaySize = byte2MB(displaySize);
     }
-    uploadFile(file, timestamp+"/", function(type, dat) {
+    uploadFile(file, timestamp + "/", function(type, dat) {
+    // uploadFile(file, locationStr + "/" + file.name, function(type, dat) {
         if (type == "Progress") {
             const progress = dat[0];
             let tempSize = size * (progress / 100);

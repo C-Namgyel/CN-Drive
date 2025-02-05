@@ -72,24 +72,33 @@ header {
     gap: 15px;
 }
 .file-item {
-    width: 100px;
-    text-align: center;
+    width: 125px; /* Adjust width as needed */
+    text-align: left;
     padding: 10px;
     margin: 5px;
     border: 1px solid #ccc;
     border-radius: 5px;
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    line-clamp: 2;
-    -webkit-line-clamp: 2;
+    display: flex; /* Flexbox for alignment */
+    align-items: center; /* Vertical centering */
     font-size: 14px;
-    line-height: 1.2em;
-    height: calc(1.2em * 1.5);
     cursor: pointer;
     word-wrap: break-word;
+    gap: 5px; /* Minimal spacing between icon and text */
 }
+
+.file-item span.icon {
+    flex-shrink: 0; /* Prevent icon from shrinking */
+    width: 20px; /* Fixed width for the icon */
+    text-align: center;
+}
+
+.file-item span.text {
+    overflow: hidden; /* Hide overflow for long text */
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex-grow: 1; /* Let the text span take available space */
+}
+
 .file-item:hover {
     background-color: #f0f0f0;
     border-color: #4caf50;
